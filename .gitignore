@@ -1,1 +1,7 @@
 .vscode/launch.json
+*.cmake
+*.c
+*.cxx
+/build
+/.vscode
+
