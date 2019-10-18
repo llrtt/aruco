@@ -6,11 +6,13 @@ include_directories( "/home/joker/eigen" )
 
 #从main.cpp生成可执行文件ArUco_Test
 add_executable(aruco0 aruco.cpp)
+add_executable(hh hh.cpp)
 
 
 
 #生成文件链接至OpenCV库，注意OpenCV_LIBS变量需在OpenCVConfig.cmake文件中定义，下同
 target_link_libraries(aruco0 ${OpenCV_LIBS} )
+target_link_libraries(hh ${OpenCV_LIBS} )
 
 
 

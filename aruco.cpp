@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 		// cameraMatrix = (cv::Mat_<double>(3, 3) << 1128.048344, 0, 339.421769, 0, 1127.052190, 236.535242, 0, 0, 1);
 		// distCoeffs = (cv::Mat_<double>(5, 1) << -0.568429, 0.514592, -0.000126, 0.000500, 0.00000);
 		cv::Ptr<cv::aruco::Dictionary> dict = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_100);
-		cv::VideoCapture cap(1);
+		cv::VideoCapture cap(0);
 		while (cap.grab())
 		{
 			cap >> a;
@@ -54,11 +54,11 @@ int main(int argc, char *argv[])
 				world_cor.push_back(cv::Point3f(0.066, -0.066, 0));
 				world_cor.push_back(cv::Point3f(-0.066, -0.066, 0));
 				cv::aruco::estimatePoseSingleMarkers(corners, 0.132, cameraMatrix, distCoeffs, rvecs, tvecs);
-				
+
 				for (int i = 0; i < ids.size(); i++)
 				{
 					cv::aruco::drawAxis(a, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], 0.066);
-					cv::solvePnP(world_cor, corners[i], cameraMatrix, distCoeffs, rvecs[i], tvecs[i],false, cv::SOLVEPNP_IPPE_SQUARE);
+					cv::solvePnP(world_cor, corners[i], cameraMatrix, distCoeffs, rvecs[i], tvecs[i], false, cv::SOLVEPNP_IPPE_SQUARE);
 					double theta_x, theta_y, theta_z;
 					cv::Mat rvecM0;
 					Eigen::Matrix3d rvecM(3, 3);
@@ -74,30 +74,33 @@ int main(int argc, char *argv[])
 					// theta_y = std::atan2(-rvecM(2, 0),
 					// 					  sqrt(rvecM(2, 1) * rvecM(2, 1) + rvecM(2, 2) * rvecM(2, 2)));
 					// theta_z = std::atan2(rvecM(1, 0), rvecM(0, 0));
-					theta_x = 3.14 - std::atan2(rvecM(2, 1), rvecM(2, 2)); //求出三个旋转角//
+					theta_x = std::atan2(rvecM(2, 1), rvecM(2, 2)) - 3.1415; //求出三个旋转角//
 					theta_y = -std::atan2(-rvecM(2, 0),
 										  sqrt(rvecM(2, 1) * rvecM(2, 1) + rvecM(2, 2) * rvecM(2, 2)));
 					theta_z = -std::atan2(rvecM(1, 0), rvecM(0, 0));
 					Eigen::Matrix3d m;
 					m = Eigen::AngleAxisd(theta_x, Eigen::Vector3d::UnitX()) * Eigen::AngleAxisd(theta_y, Eigen::Vector3d::UnitY()) * Eigen::AngleAxisd(theta_z, Eigen::Vector3d::UnitZ());
 					Eigen::Vector3d n(tvecs[i][0], tvecs[i][1], tvecs[i][2]);
-					Eigen::Vector3d l = m * n;
+					Eigen::MatrixXd l(1, 3);
+					l = n.transpose() * m;
+					std::cout << m * n << std::endl;
+					std::cout << l << std::endl;
 					ss.clear();
-					ss << l[2];
+					ss << l(0, 2);
 					ss >> depth;
-					std::cout << depth << std::endl;
+					// std::cout << depth << std::endl;
 					depth = depth.substr(0, 5);
 					cv::putText(a, "depth: " + depth + "m", corners[i][0], cv::FONT_HERSHEY_COMPLEX, 0.3, cv::Scalar(255, 255, 255));
 					ss.clear();
-					ss << l[1];
+					ss << l(0, 1);
 					ss >> depth;
-					std::cout << depth << std::endl;
+					// std::cout << depth << std::endl;
 					depth = depth.substr(0, 5);
 					cv::putText(a, "y: " + depth + "m", corners[i][1], cv::FONT_HERSHEY_COMPLEX, 0.3, cv::Scalar(255, 255, 255));
 					ss.clear();
-					ss << l[0];
+					ss << l(0, 1);
 					ss >> depth;
-					std::cout << depth << std::endl;
+					// std::cout << depth << std::endl;
 					depth = depth.substr(0, 5);
 					cv::putText(a, "x: " + depth + "m", corners[i][2], cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 255, 255));
 				}
